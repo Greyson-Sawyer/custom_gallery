@@ -1,0 +1,12 @@
+node_modules
+img/*
+.env
+
+# remove python files that should not be in the repo
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+share/
+lib/
+bin/

@@ -1,0 +1,106 @@
+// schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./image_analysis.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Posts {
+  id        Int     @id @default(autoincrement())
+  shortcode String  @unique
+  username  String
+  caption   String?
+  post_date String
+
+  Images Images[] @relation("PostImages")
+}
+
+model Images {
+  id                 Int      @id @default(autoincrement())
+  absolute_file_path String   @unique
+  relative_file_path String   @unique
+  filename           String
+  processed_at       DateTime
+  post_id            Int
+  width              Int
+  height             Int
+  post               Posts    @relation("PostImages", fields: [post_id], references: [id])
+
+  Luminance        Luminance?
+  Saturation       Saturation?
+  GLCM             GLCM?
+  Laplacian        Laplacian?
+  KMeansClustering KMeansClustering[]
+}
+
+model Luminance {
+  image_id           Int   @id
+  mean_luminance     Float
+  median_luminance   Float
+  std_luminance      Float
+  dynamic_range      Float
+  rms_contrast       Float
+  michelson_contrast Float
+  luminance_skewness Float
+  luminance_kurtosis Float
+  min_luminance      Float // Added field
+  max_luminance      Float // Added field
+
+  Images Images @relation(fields: [image_id], references: [id], onDelete: Cascade)
+}
+
+model Saturation {
+  image_id          Int   @id
+  mean_saturation   Float
+  median_saturation Float
+  std_saturation    Float
+
+  Images Images @relation(fields: [image_id], references: [id], onDelete: Cascade)
+}
+
+model GLCM {
+  image_id    Int   @id
+  contrast    Float
+  correlation Float
+
+  Images Images @relation(fields: [image_id], references: [id], onDelete: Cascade)
+}
+
+model Laplacian {
+  image_id Int   @id
+  variance Float
+
+  Images Images @relation(fields: [image_id], references: [id], onDelete: Cascade)
+}
+
+model KMeansClustering {
+  id           Int        @id @default(autoincrement())
+  image_id     Int
+  num_clusters Int
+  Clusters     Clusters[]
+
+  Images Images @relation(fields: [image_id], references: [id], onDelete: Cascade)
+}
+
+model Clusters {
+  clustering_id Int
+  cluster_index Int
+  r             Int
+  g             Int
+  b             Int
+  l             Float // Added field for LAB 'L' channel
+  a             Float // Added field for LAB 'A' channel
+  b_channel     Float // Added field for LAB 'B' channel
+  c             Float
+  h             Float
+  count         Int
+  percentage    Float
+
+  KMeansClustering KMeansClustering @relation(fields: [clustering_id], references: [id], onDelete: Cascade)
+
+  @@id([clustering_id, cluster_index])
+}
